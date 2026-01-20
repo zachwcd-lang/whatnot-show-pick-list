@@ -421,14 +421,14 @@
                     <input type="date" id="showDate">
                 </div>
                 <div class="field">
-                    <label>Hour Block</label>
-                    <select id="hourBlock">
-                        <option value="Hour 1">Hour 1</option>
-                        <option value="Hour 2">Hour 2</option>
-                        <option value="Hour 3">Hour 3</option>
-                        <option value="Hour 4">Hour 4</option>
-                        <option value="Hour 5">Hour 5</option>
-                        <option value="Hour 6">Hour 6</option>
+                    <label>Show Duration (Hours)</label>
+                    <select id="showDuration">
+                        <option value="1">1 Hour</option>
+                        <option value="2">2 Hours</option>
+                        <option value="3">3 Hours</option>
+                        <option value="4">4 Hours</option>
+                        <option value="5">5 Hours</option>
+                        <option value="6">6 Hours</option>
                     </select>
                 </div>
             </div>
@@ -612,12 +612,13 @@ Ohtani Stickers	1
             
             // Update preview header
             const date = document.getElementById('showDate').value;
-            const hour = document.getElementById('hourBlock').value;
+            const duration = document.getElementById('showDuration').value;
             const streamer = document.getElementById('streamerName').value || 'TBD';
             const platform = document.getElementById('platform').value;
-            
-            document.getElementById('previewTitle').textContent = `${platform} Pick List - ${hour}`;
-            document.getElementById('previewSubtitle').textContent = `${date} | Streamer: ${streamer} | ${rows.length} items`;
+
+            const durationText = duration === '1' ? '1 Hour' : `${duration} Hours`;
+            document.getElementById('previewTitle').textContent = `${platform} Pick List - ${durationText}`;
+            document.getElementById('previewSubtitle').textContent = `${date} | Streamer: ${streamer} | ${rows.length} items/hour × ${duration} hours`;
             
             // Update preview table
             const tbody = document.getElementById('previewBody');
@@ -646,20 +647,20 @@ Ohtani Stickers	1
         function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            
+
             const lines = getProductLines();
             const rows = expandToRows(lines);
-            
+
             if (rows.length === 0) {
                 alert('Please add at least one product line with quantity > 0');
                 return;
             }
-            
+
             const date = document.getElementById('showDate').value;
-            const hour = document.getElementById('hourBlock').value;
+            const duration = parseInt(document.getElementById('showDuration').value);
             const streamer = document.getElementById('streamerName').value || 'TBD';
             const platform = document.getElementById('platform').value;
-            
+
             // PDF Settings
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
@@ -672,12 +673,13 @@ Ohtani Stickers	1
             let currentY = margin;
             let currentPage = 1;
             let rowsOnCurrentPage = 0;
+            let currentHour = 1;
 
             function addHeader() {
                 // Title
                 doc.setFontSize(16);
                 doc.setFont('helvetica', 'bold');
-                doc.text(`${platform} Pick List - ${hour}`, margin, currentY + 8);
+                doc.text(`${platform} Pick List - Hour ${currentHour}`, margin, currentY + 8);
 
                 // Subtitle
                 doc.setFontSize(10);
@@ -755,18 +757,36 @@ Ohtani Stickers	1
                 rowsOnCurrentPage++;
             }
 
-            // Generate PDF
-            addHeader();
-            rows.forEach((row, i) => addRow(row, i));
-            
-            // Footer on last page
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'italic');
-            doc.text(`Generated: ${new Date().toLocaleString()}`, margin, pageHeight - 10);
-            doc.text(`Page ${currentPage}`, pageWidth - margin - 15, pageHeight - 10);
-            
+            // Generate PDF for each hour
+            for (let hour = 1; hour <= duration; hour++) {
+                currentHour = hour;
+
+                // Add new page for hours after the first
+                if (hour > 1) {
+                    doc.addPage();
+                    currentPage++;
+                    currentY = margin;
+                }
+
+                addHeader();
+                rows.forEach((row, i) => addRow(row, i));
+            }
+
+            // Add page numbers to all pages
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'italic');
+                if (i === totalPages) {
+                    doc.text(`Generated: ${new Date().toLocaleString()}`, margin, pageHeight - 10);
+                }
+                doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin - 25, pageHeight - 10);
+            }
+
             // Save
-            const filename = `PickList_${platform}_${hour.replace(' ', '')}_${date}.pdf`;
+            const durationText = duration === 1 ? '1Hour' : `${duration}Hours`;
+            const filename = `PickList_${platform}_${durationText}_${date}.pdf`;
             doc.save(filename);
         }
         
