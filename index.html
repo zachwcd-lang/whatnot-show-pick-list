@@ -666,72 +666,95 @@ Ohtani Stickers	1
             const margin = 15;
             const rowHeight = 8;
             const headerHeight = 35;
-            
+            const maxRowsPerPage = 25; // Safe limit to prevent cutoff when printing
+            const productColWidth = pageWidth - margin - 15 - 45; // Available width for product name
+
             let currentY = margin;
             let currentPage = 1;
-            
+            let rowsOnCurrentPage = 0;
+
             function addHeader() {
                 // Title
                 doc.setFontSize(16);
                 doc.setFont('helvetica', 'bold');
                 doc.text(`${platform} Pick List - ${hour}`, margin, currentY + 8);
-                
+
                 // Subtitle
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
                 doc.text(`Date: ${date} | Streamer: ${streamer} | Total Items: ${rows.length}`, margin, currentY + 16);
-                
+
                 // Table header
                 currentY += 25;
                 doc.setFillColor(240, 240, 240);
                 doc.rect(margin, currentY, pageWidth - 2 * margin, rowHeight, 'F');
-                
+
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'bold');
                 doc.text('#', margin + 2, currentY + 5.5);
                 doc.text('Product Line', margin + 15, currentY + 5.5);
                 doc.text('Qty', pageWidth - margin - 35, currentY + 5.5);
                 doc.text('Picked', pageWidth - margin - 18, currentY + 5.5);
-                
+
                 // Header line
                 doc.setLineWidth(0.5);
                 doc.line(margin, currentY + rowHeight, pageWidth - margin, currentY + rowHeight);
-                
+
                 currentY += rowHeight + 2;
+                rowsOnCurrentPage = 0;
             }
-            
+
             function addRow(row, index) {
-                // Check if we need a new page
-                if (currentY + rowHeight > pageHeight - margin) {
+                // Check if we need a new page (either hit row limit or page height)
+                if (rowsOnCurrentPage >= maxRowsPerPage || currentY + rowHeight > pageHeight - margin) {
                     doc.addPage();
                     currentPage++;
                     currentY = margin;
                     addHeader();
                 }
-                
+
                 doc.setFontSize(9);
                 doc.setFont('helvetica', 'normal');
-                
+
                 // Row number
                 doc.text(String(index + 1), margin + 2, currentY + 5);
-                
-                // Product name
-                doc.text(row.name.substring(0, 50), margin + 15, currentY + 5);
-                
-                // Quantity
-                doc.text(String(row.qty), pageWidth - margin - 33, currentY + 5);
-                
-                // Checkbox
+
+                // Product name - wrap text if too long
+                const productName = row.name;
+                const textLines = doc.splitTextToSize(productName, productColWidth);
+                const lineCount = textLines.length;
+                const actualRowHeight = Math.max(rowHeight, lineCount * 4 + 4);
+
+                // Check again if wrapped text pushes us to new page
+                if (currentY + actualRowHeight > pageHeight - margin) {
+                    doc.addPage();
+                    currentPage++;
+                    currentY = margin;
+                    addHeader();
+                }
+
+                // Draw product name (potentially multi-line)
+                textLines.forEach((line, lineIndex) => {
+                    doc.text(line, margin + 15, currentY + 5 + (lineIndex * 4));
+                });
+
+                // Quantity - vertically centered
+                const qtyY = currentY + (actualRowHeight / 2) + 1;
+                doc.text(String(row.qty), pageWidth - margin - 33, qtyY);
+
+                // Checkbox - vertically centered
+                const checkboxY = currentY + (actualRowHeight / 2) - 2.5;
                 doc.setLineWidth(0.3);
-                doc.rect(pageWidth - margin - 15, currentY + 1, 5, 5);
-                
+                doc.rect(pageWidth - margin - 15, checkboxY, 5, 5);
+
                 // Row line
                 doc.setLineWidth(0.1);
-                doc.line(margin, currentY + rowHeight, pageWidth - margin, currentY + rowHeight);
-                
-                currentY += rowHeight;
+                doc.line(margin, currentY + actualRowHeight, pageWidth - margin, currentY + actualRowHeight);
+
+                currentY += actualRowHeight;
+                rowsOnCurrentPage++;
             }
-            
+
             // Generate PDF
             addHeader();
             rows.forEach((row, i) => addRow(row, i));
