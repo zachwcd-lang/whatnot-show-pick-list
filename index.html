@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
     <title>WCD Pick List Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -45,6 +46,18 @@
             border-bottom: 1px solid var(--border);
         }
         
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .logo-img {
+            height: 50px;
+            width: auto;
+        }
+
         .logo {
             font-size: 12px;
             font-weight: 600;
@@ -391,9 +404,13 @@
 <body>
     <div class="container">
         <header>
-            <div class="logo">West Coast Deals</div>
-            <h1>Pick List Generator</h1>
-            <p class="subtitle">Generate PDF pick lists for warehouse team</p>
+            <div class="header-top">
+                <img src="logo.jpg" alt="West Coast Deals" class="logo-img">
+                <div>
+                    <h1>Pick List Generator</h1>
+                    <p class="subtitle">Generate PDF pick lists for warehouse team</p>
+                </div>
+            </div>
         </header>
         
         <div class="form-section">
