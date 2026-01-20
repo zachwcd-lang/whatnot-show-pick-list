@@ -49,6 +49,7 @@
         .header-top {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 16px;
             margin-bottom: 12px;
         }
@@ -56,6 +57,7 @@
         .logo-img {
             height: 50px;
             width: auto;
+            cursor: pointer;
         }
 
         .logo {
@@ -405,7 +407,7 @@
     <div class="container">
         <header>
             <div class="header-top">
-                <img src="logo.jpg" alt="West Coast Deals" class="logo-img">
+                <a href="javascript:location.reload()"><img src="logo.jpg" alt="West Coast Deals" class="logo-img"></a>
                 <div>
                     <h1>Pick List Generator</h1>
                     <p class="subtitle">Generate PDF pick lists for warehouse team</p>
